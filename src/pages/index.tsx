@@ -1,15 +1,39 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
-import RegexHelperTranslator from "@/components/RegexHelperTranslator";
+import OpenAI from "openai";
+import formatText from "../lib/formatText";
+import createRegex from "../lib/createRegex";
+
+const API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
 
 const Home: NextPage = () => {
   const [rawText, setRawText] = useState("");
   const [formattedText, setFormattedText] = useState("");
   const [regexCode, setRegexCode] = useState("");
 
-  const generateRegex = () => {
-    // Add your code here to generate the regex
+  const generateBothInfo = async () => {
+    generateRegex();
+    generateFormattedText();
+  };
+
+  const generateRegex = async () => {
+    try {
+      const regexCode = await createRegex(rawText, API_KEY, "Python");
+      setRegexCode(regexCode);
+      console.log(regexCode);
+    } catch (error) {
+      console.log("error retrieving the regex code", error);
+    }
+  };
+
+  const generateFormattedText = async () => {
+    try {
+      const formattedText = await formatText(rawText, API_KEY);
+      setFormattedText(formattedText);
+    } catch (error) {
+      console.log("error retrieving the formatted version", error);
+    }
   };
 
   return (
@@ -31,10 +55,10 @@ const Home: NextPage = () => {
           className="py-4 px-6 rounded-lg w-60 text-lg focus:outline-none mb-4"
         />
         <button
-          onClick={generateRegex}
+          onClick={generateBothInfo}
           className="py-2 px-4 bg-slate-500 text-white rounded-lg"
         >
-          Generate Regex
+          Generate Text/Regex
         </button>
       </div>
       <div className="p-10 rounded-md bg-gray-100 flex flex-row items-start justify-center mt-8">
@@ -59,11 +83,11 @@ const Home: NextPage = () => {
           >
             Regex Code
           </label>
-          <textarea
+          <input
             id="regex-code"
             value={regexCode}
             onChange={(e) => setRegexCode(e.target.value)}
-            className="py-4 px-6 rounded-lg w-full h-48 text-lg focus:outline-none"
+            className="py-4 px-6 rounded-lg w-full h-48 text-lg focus:outline-none language-python hljs"
           />
         </div>
       </div>
